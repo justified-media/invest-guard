@@ -17,9 +17,9 @@ export default function Home() {
         >
           Login
         </Link>
-        
+
         <Link
-          href="/signUp"
+          href="/signup"
           className="px-6 py-2.5 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
         >
           Sign up
