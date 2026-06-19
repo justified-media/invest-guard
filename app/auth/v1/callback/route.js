@@ -37,7 +37,16 @@ export async function GET(request) {
     if (!error) {
       // SUCCESS: Force redirect straight to the dashboard!
       return NextResponse.redirect(`${origin}${next}`);
+    } else {
+      // 🚨 CRITICAL LOGS FOR VERCEL LIVE DEBUGGING:
+      console.error("===================================================");
+      console.error("SUPABASE AUTH EXCHANGE ERROR DETECTED:", error.message);
+      console.error("FULL ERROR CONTEXT:", JSON.stringify(error, null, 2));
+      console.error("===================================================");
     }
+  } else {
+    // Log if the OAuth code parameter never arrived from Google at all
+    console.error("OAuth error: No temporary code parameter found in callback URL");
   }
 
   // If something goes wrong, send them back to login with an error flag
