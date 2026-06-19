@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // 1. Added Next.js Router for manual navigation
+import { useRouter } from 'next/navigation'; 
 import { supabase } from '@/utils/supabase';
 
 export default function LoginPage() {
-  const router = useRouter(); // Initialize the router instance
+  const router = useRouter(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,11 +14,13 @@ export default function LoginPage() {
 
   // Handle Google Login
   const handleGoogleSignIn = async () => {
+    // Dynamic origin detection handles localhost, local network IPs, and Vercel live production URLs perfectly
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // 2. FIXED: Appended /v1/ to completely match your Google Console configurations!
-        redirectTo: `${window.location.origin}/auth/v1/callback`, 
+        redirectTo: `${currentOrigin}/auth/v1/callback`, 
       },
     });
     if (error) setMessage(`Error: ${error.message}`);
@@ -37,7 +39,6 @@ export default function LoginPage() {
     } else {
       setMessage('Success! Logging you in...');
       
-      // 3. FIXED: Tell the browser to hard-refresh state cookies, then drop the user onto the dashboard
       router.refresh();
       router.push('/dashboard');
     }
@@ -47,7 +48,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="absolute top-6 left-6">
         <Link href="/" className="text-sm font-semibold text-sky-600 hover:text-sky-700 transition-colors">
-          ← Back to InvestGuard
+          &larr; Back to InvestGuard
         </Link>
       </div>
 
@@ -109,7 +110,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
-                placeholder="••••••••"
+                placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
               />
             </div>
 
