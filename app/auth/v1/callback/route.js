@@ -2,18 +2,17 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
-export async function GET(request: Request) {
+export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
+  // If "next" parameter isn't explicitly set by the button, default straight to /dashboard
   const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
     const cookieStore = await cookies();
-
-    // Create a server-side Supabase client dynamically to manage server cookies safely
     const supabaseServer = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
@@ -25,21 +24,22 @@ export async function GET(request: Request) {
                 cookieStore.set(name, value, options)
               );
             } catch {
-              // The `setAll` method can be ignored if the middleware is handling it
+              // The setAll method can be safely ignored if middleware handles it
             }
           },
         },
       }
     );
 
-    // Swap the temporary security code for a permanent, secure user session cookie
+    // Exchange the temporary code for a secure, active user session
     const { error } = await supabaseServer.auth.exchangeCodeForSession(code);
     
     if (!error) {
+      // SUCCESS: Force redirect straight to the dashboard!
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  // If anything breaks, return users back to login with a clear message
-  return NextResponse.redirect(`${origin}/login?message=Could not authenticate user`);
+  // If something goes wrong, send them back to login with an error flag
+  return NextResponse.redirect(`${origin}/login?message=Auth exchange failed`);
 }
