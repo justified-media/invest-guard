@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // 1. Added Next.js Router for manual navigation
 import { supabase } from '@/utils/supabase';
 
 export default function LoginPage() {
+  const router = useRouter(); // Initialize the router instance
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,8 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Redirects back to your app after google login
+        // 2. FIXED: Appended /v1/ to completely match your Google Console configurations!
+        redirectTo: `${window.location.origin}/auth/v1/callback`, 
       },
     });
     if (error) setMessage(`Error: ${error.message}`);
@@ -27,12 +30,17 @@ export default function LoginPage() {
     setMessage('');
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
     if (error) {
       setMessage(`Error: ${error.message}`);
+      setLoading(false);
     } else {
       setMessage('Success! Logging you in...');
+      
+      // 3. FIXED: Tell the browser to hard-refresh state cookies, then drop the user onto the dashboard
+      router.refresh();
+      router.push('/dashboard');
     }
-    setLoading(false);
   };
 
   return (

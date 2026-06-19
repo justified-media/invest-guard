@@ -15,7 +15,8 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // 1. FIXED: Appended /v1/ to align perfectly with your Google Cloud Console configuration
+        redirectTo: `${window.location.origin}/auth/v1/callback`,
       },
     });
     if (error) setMessage(`Error: ${error.message}`);
@@ -26,12 +27,19 @@ export default function SignupPage() {
     setLoading(true);
     setMessage('');
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        // 2. FIXED: Tells Supabase where to redirect the user after they click the email verification link
+        emailRedirectTo: `${window.location.origin}/auth/v1/callback`,
+      }
+    });
     
     if (error) {
       setMessage(`Error: ${error.message}`);
     } else {
-      setMessage('Registration successful! Check your email for the confirmation link.');
+      setMessage('Registration successful! Check your email inbox for the confirmation link.');
     }
     setLoading(false);
   };
