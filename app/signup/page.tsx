@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import the router for redirecting
 import { supabase } from '@/utils/supabase';
 
 export default function SignupPage() {
+  const router = useRouter(); // Initialize router instance
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,6 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // 1. FIXED: Appended /v1/ to align perfectly with your Google Cloud Console configuration
         redirectTo: `${window.location.origin}/auth/v1/callback`,
       },
     });
@@ -27,21 +28,33 @@ export default function SignupPage() {
     setLoading(true);
     setMessage('');
 
-    const { error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        // 2. FIXED: Tells Supabase where to redirect the user after they click the email verification link
-        emailRedirectTo: `${window.location.origin}/auth/v1/callback`,
-      }
-    });
+    // 1. Create the user account (with confirmation disabled, they are automatically active!)
+    const { data, error } = await supabase.auth.signUp({ email, password });
     
     if (error) {
       setMessage(`Error: ${error.message}`);
-    } else {
-      setMessage('Registration successful! Check your email inbox for the confirmation link.');
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // 2. Double-check if a session was created right away
+    if (data?.session) {
+      setMessage('Account created! Entering dashboard...');
+      router.refresh();
+      router.push('/dashboard');
+    } else {
+      // Fallback: If Supabase didn't automatically start the session, sign them in manually
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (loginError) {
+        setMessage(`Account created, but auto-login failed: ${loginError.message}`);
+        setLoading(false);
+      } else {
+        setMessage('Success! Entering dashboard...');
+        router.refresh();
+        router.push('/dashboard');
+      }
+    }
   };
 
   return (
