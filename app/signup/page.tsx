@@ -14,13 +14,24 @@ export default function SignupPage() {
 
   // Handle Google Registration
   const handleGoogleSignUp = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/v1/callback`,
       },
     });
-    if (error) setMessage(`Error: ${error.message}`);
+
+    if (error) {
+      setMessage(`Error: ${error.message}`);
+      return;
+    }
+
+    if (data?.url) {
+      window.location.assign(data.url);
+      return;
+    }
+
+    setMessage('Error: Google sign-up could not start. Please try again.');
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -28,33 +39,22 @@ export default function SignupPage() {
     setLoading(true);
     setMessage('');
 
-    // 1. Create the user account (with confirmation disabled, they are automatically active!)
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    
-    if (error) {
-      setMessage(`Error: ${error.message}`);
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      setMessage(`Error: ${result.error || 'Signup failed'}`);
       setLoading(false);
       return;
     }
 
-    // 2. Double-check if a session was created right away
-    if (data?.session) {
-      setMessage('Account created! Entering dashboard...');
-      router.refresh();
-      router.push('/dashboard');
-    } else {
-      // Fallback: If Supabase didn't automatically start the session, sign them in manually
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (loginError) {
-        setMessage(`Account created, but auto-login failed: ${loginError.message}`);
-        setLoading(false);
-      } else {
-        setMessage('Success! Entering dashboard...');
-        router.refresh();
-        router.push('/dashboard');
-      }
-    }
+    router.push('/dashboard');
   };
 
   return (

@@ -127,7 +127,7 @@ export default async function DashboardPage() {
           {/* TRADINGVIEW CRYPTO MARKET CHART WIDGET */}
           <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-2 md:p-4 shadow-xl min-h-[500px]">
             <iframe
-              src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=BINANCE%3ABTCUSDT&interval=D&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Africa%/Lagos&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=investguard"
+              src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=BINANCE%3ABTCUSDT&interval=D&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Africa/Lagos&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=%5B%5D&disabled_features=%5B%5D&locale=en&utm_source=investguard"
               className="w-full h-[500px] rounded-xl border-0"
               allowFullScreen
             />

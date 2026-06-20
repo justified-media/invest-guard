@@ -2,14 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request) {
-  // 1. Create an unmodified base response object
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  const response = NextResponse.next();
 
-  // 2. Initialize Supabase Client safely
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -19,16 +13,6 @@ export async function middleware(request) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Explicitly sync cookies across request tracking and response stream
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-          });
-          
-          // Re-instantiate the server response header loop to lock in chunked session cookies
-          response = NextResponse.next({
-            request,
-          });
-          
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
@@ -37,7 +21,6 @@ export async function middleware(request) {
     }
   );
 
-  // 3. Refresh session safely
   await supabase.auth.getUser();
 
   return response;

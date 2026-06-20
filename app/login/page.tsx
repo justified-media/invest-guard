@@ -14,16 +14,26 @@ export default function LoginPage() {
 
   // Handle Google Login
   const handleGoogleSignIn = async () => {
-    // Dynamic origin detection handles localhost, local network IPs, and Vercel live production URLs perfectly
     const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${currentOrigin}/auth/v1/callback`, 
+        redirectTo: `${currentOrigin}/auth/v1/callback`,
       },
     });
-    if (error) setMessage(`Error: ${error.message}`);
+
+    if (error) {
+      setMessage(`Error: ${error.message}`);
+      return;
+    }
+
+    if (data?.url) {
+      window.location.assign(data.url);
+      return;
+    }
+
+    setMessage('Error: Google sign-in could not start. Please try again.');
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -31,17 +41,22 @@ export default function LoginPage() {
     setLoading(true);
     setMessage('');
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-      setMessage(`Error: ${error.message}`);
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      setMessage(`Error: ${result.error || 'Login failed'}`);
       setLoading(false);
-    } else {
-      setMessage('Success! Logging you in...');
-      
-      router.refresh();
-      router.push('/dashboard');
+      return;
     }
+
+    router.push('/dashboard');
   };
 
   return (
