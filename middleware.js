@@ -19,9 +19,17 @@ export async function middleware(request) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Explicitly map cookies straight to response headers to avoid breaking the request URL stream
+          // Explicitly sync cookies across request tracking and response stream
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
+          });
+          
+          // Re-instantiate the server response header loop to lock in chunked session cookies
+          response = NextResponse.next({
+            request,
+          });
+          
+          cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
         },
