@@ -24,7 +24,6 @@ export default function SignupPage() {
         options: {
           redirectTo: `${currentOrigin}/auth/v1/callback`,
           skipBrowserRedirect: true,
-          pkce_enabled: true,
         },
       });
 
