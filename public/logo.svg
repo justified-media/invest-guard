@@ -1,0 +1,20 @@
+<svg width="180" height="60" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="investGuardTitle">
+  <title id="investGuardTitle">Invest Guard Logo</title>
+  <defs>
+    <linearGradient id="shieldGradient" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#3fa9f5" />
+      <stop offset="100%" stop-color="#1f4f8a" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#68d1ff" />
+      <stop offset="100%" stop-color="#a1d4ff" />
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path d="M44 6c-1.5 0-3 .2-4.5.6C34 8 30 10.4 28 12 24 15 16 20 10 26 6 31 4 38 4 44 4 52 10 56 20 56c4 0 11-2 16-4 6-2 10-4 10-4s4 3 10 4c5 2 12 4 16 4 10 0 16-4 16-12 0-6-2-13-6-18C140 20 132 15 128 12c-2-1.6-6-4-11.5-5.4C106 6.2 104.5 6 103 6H44Zm-4 6h7c1.1 0 2 .9 2 2v3h-9v7h12v3c0 5.5-3.7 10-7 13-3.3-3-7-7.5-7-13v-3H36v-7h9v-3c0-1.1-.9-2-2-2h-7v-3Zm88 24l-24 24-14-15 8-8 6 6 16-16 14 15Z" fill="url(#shieldGradient)" />
+    <path d="M140 38l-14 14-8-8 14-14 8 8z" fill="#8fe6ff" opacity="0.65" />
+    <path d="M24 12l12 12 22-22" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="56" y="40" font-family="Inter, sans-serif" font-weight="700" font-size="20" fill="url(#textGradient)">INVEST</text>
+    <text x="56" y="56" font-family="Inter, sans-serif" font-weight="600" font-size="16" fill="#dbe9ff">GUARD</text>
+  </g>
+</svg>
