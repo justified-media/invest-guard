@@ -8,8 +8,17 @@ export async function GET(request) {
   const next = url.searchParams.get('next') ?? '/dashboard';
 
   if (!code) {
-    console.error('OAuth error: No temporary code parameter found in callback URL', request.url);
-    return NextResponse.redirect(`${url.origin}/login?message=Auth exchange failed`);
+    const query = Array.from(url.searchParams.entries()).map(([key, value]) => ({ key, value }));
+    const body = JSON.stringify({
+      message: 'OAuth error: callback URL has no code parameter',
+      requestUrl: request.url,
+      query,
+    }, null, 2);
+    console.error(body);
+    return new Response(body, {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const cookieStore = await cookies();
@@ -35,7 +44,15 @@ export async function GET(request) {
   const { error } = await supabaseServer.auth.exchangeCodeForSession(code);
   if (error) {
     console.error('SUPABASE AUTH EXCHANGE ERROR DETECTED:', error.message, 'callbackUrl=', request.url);
-    return NextResponse.redirect(`${url.origin}/login?message=Auth exchange failed`);
+    const body = JSON.stringify({
+      message: 'Supabase auth exchange failed',
+      error: error.message,
+      callbackUrl: request.url,
+    });
+    return new Response(body, {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   return response;

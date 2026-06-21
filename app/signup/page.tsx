@@ -14,24 +14,37 @@ export default function SignupPage() {
 
   // Handle Google Registration
   const handleGoogleSignUp = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/v1/callback`,
-      },
-    });
+    setMessage('');
+    try {
+      const currentOrigin = window.location.origin;
+      console.log('Google signup origin:', currentOrigin);
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-      return;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${currentOrigin}/auth/v1/callback`,
+          skipBrowserRedirect: true,
+          pkce_enabled: true,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.url) {
+        throw new Error('No redirect URL returned by Supabase.');
+      }
+
+      const oauthUrl = data.url;
+      console.log('Google OAuth redirect URL:', oauthUrl);
+      setMessage(`Redirecting to Google: ${oauthUrl}`);
+      window.location.href = oauthUrl;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Google sign-up failed', err);
+      setMessage(`Google sign-up failed: ${message}`);
     }
-
-    if (data?.url) {
-      window.location.assign(data.url);
-      return;
-    }
-
-    setMessage('Error: Google sign-up could not start. Please try again.');
   };
 
   const handleSignup = async (e: React.FormEvent) => {

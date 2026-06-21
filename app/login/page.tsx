@@ -14,26 +14,37 @@ export default function LoginPage() {
 
   // Handle Google Login
   const handleGoogleSignIn = async () => {
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    setMessage('');
+    try {
+      const currentOrigin = window.location.origin;
+      console.log('Google sign-in origin:', currentOrigin);
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${currentOrigin}/auth/v1/callback`,
-      },
-    });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${currentOrigin}/auth/v1/callback`,
+          skipBrowserRedirect: true,
+          pkce_enabled: true,
+        },
+      });
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-      return;
+      if (error) {
+        throw error;
+      }
+
+      if (!data?.url) {
+        throw new Error('No redirect URL returned by Supabase.');
+      }
+
+      const oauthUrl = data.url;
+      console.log('Google OAuth redirect URL:', oauthUrl);
+      setMessage(`Redirecting to Google: ${oauthUrl}`);
+      window.location.href = oauthUrl;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Google sign-in failed', err);
+      setMessage(`Google sign-in failed: ${message}`);
     }
-
-    if (data?.url) {
-      window.location.assign(data.url);
-      return;
-    }
-
-    setMessage('Error: Google sign-in could not start. Please try again.');
   };
 
   const handleLogin = async (e: React.FormEvent) => {
