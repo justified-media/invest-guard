@@ -65,13 +65,13 @@ export default function MobileNav() {
           >
             Overview
           </Link>
-          <button
-            type="button"
+          <Link
+            href="/dashboard/trading-arena"
+            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-left text-base font-semibold text-slate-100 transition hover:border-slate-700"
           >
             Trading Arena
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => setDrawerOpen(false)}

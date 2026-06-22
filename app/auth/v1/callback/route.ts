@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { createServiceRoleClient } from '@/utils/supabase';
 
 function getEnvVar(name: string): string {
   const value = process.env[name];
@@ -61,6 +62,26 @@ export async function GET(request: NextRequest) {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  const { data: userData, error: userError } = await supabaseServer.auth.getUser();
+  if (!userError && userData?.user) {
+    const user = userData.user;
+    const username = user.email ? user.email.split('@')[0] : user.id;
+    const profileClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabaseServer;
+    const { error: profileError } = await profileClient.from('profiles').upsert(
+      {
+        id: user.id,
+        username,
+        balance: 10000,
+      },
+      { onConflict: 'id' }
+    );
+    if (profileError) {
+      console.error('Failed to upsert profile row after OAuth callback:', profileError.message);
+    }
+  } else {
+    console.error('Unable to resolve authenticated user after callback:', userError?.message);
   }
 
   return response;

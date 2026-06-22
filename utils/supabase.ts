@@ -21,3 +21,17 @@ export const supabase = isBrowser
         detectSessionInUrl: false,
       },
     });
+
+export function createServiceRoleClient() {
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseServiceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY in environment.');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      flowType: 'pkce',
+      detectSessionInUrl: false,
+    },
+  });
+}

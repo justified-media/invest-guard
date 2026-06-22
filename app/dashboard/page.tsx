@@ -54,9 +54,9 @@ export default async function DashboardPage() {
             <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 bg-sky-600 text-white font-semibold rounded-xl transition-all">
               📊 Overview
             </Link>
-            <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl font-medium transition-all">
+            <Link href="/dashboard/trading-arena" className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl font-medium transition-all">
               📈 Trading Arena
-            </button>
+            </Link>
             <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl font-medium transition-all">
               💼 My Portfolio
             </button>
