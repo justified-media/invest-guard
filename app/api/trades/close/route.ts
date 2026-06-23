@@ -6,8 +6,11 @@ import { createServiceRoleClient } from '@/utils/supabase';
 export async function POST(request: NextRequest) {
   try {
     const { positionId } = await request.json();
-    const cookieStore = await cookies();
+    if (!positionId) {
+      return NextResponse.json({ error: 'Missing position identifier.' }, { status: 400 });
+    }
 
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,14 +30,16 @@ export async function POST(request: NextRequest) {
 
     const dbClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabase;
 
-    // Update the record inside your 'trades' table to CLOSED
-    const { error } = await dbClient
+    // Updates the trade to CLOSED
+    const { error: updateError } = await dbClient
       .from('trades')
       .update({ status: 'CLOSED' })
       .eq('id', positionId)
       .eq('user_id', user.id);
 
-    if (error) throw error;
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

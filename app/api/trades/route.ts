@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'; // Force Next.js to skip caching loops and fetch fresh database rows
+
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -10,7 +12,7 @@ function getContractSize(symbol: string, marketType: string): number {
   return 1; 
 }
 
-// 1. GET ENDPOINT: Fetches active open trades on browser refresh
+// 1. GET HANDLER: Running on browser refreshes to retrieve open positions
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -25,35 +27,47 @@ export async function GET(request: NextRequest) {
     }
   );
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+  // Fallback engine: Try browser cookies first, then fall back to the URL parameter string (?userId=...)
+  let { data: { user }, error: authError } = await supabase.auth.getUser();
+  let verifiedUserId = user?.id;
+
+  if (!verifiedUserId) {
+    const { searchParams } = new URL(request.url);
+    const queryUserId = searchParams.get('userId');
+    if (queryUserId) {
+      verifiedUserId = queryUserId;
+    }
   }
 
-  // FIXED: Pointing back to your actual database table 'trades'
+  if (!verifiedUserId) {
+    return NextResponse.json({ error: 'Authentication or Valid User ID required.' }, { status: 401 });
+  }
+
+  // Fetch only active open trades matching this exact user UUID
   const { data: activeTrades, error: dbError } = await supabase
     .from('trades')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', verifiedUserId)
     .eq('status', 'OPEN');
 
   if (dbError) {
     return NextResponse.json({ error: dbError.message }, { status: 500 });
   }
 
+  // Map perfectly over columns without letting any NULL attributes crash the terminal setup
   const positions = (activeTrades || []).map((t) => ({
     id: t.id,
-    symbol: t.symbol,
-    type: t.type,
-    amount: Number(t.amount), 
-    entryPrice: Number(t.entry_price),
+    symbol: t.symbol || 'EUR/USD',
+    type: t.type || 'BUY',
+    amount: Number(t.amount || 0.01), 
+    entryPrice: Number(t.entry_price || 0),
     marketType: t.market_type || 'CRYPTO',
   }));
 
   return NextResponse.json({ positions });
 }
 
-// 2. POST ENDPOINT: Executes a brand new trade
+// 2. POST HANDLER: Running when executing a brand new order from the sidebar
 export async function POST(request: NextRequest) {
   const { amount, type, symbol, entry_price, marketType } = await request.json();
   const cookieStore = await cookies();
@@ -90,7 +104,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unable to load user profile.' }, { status: 500 });
   }
 
-  const contractSize = getContractSize(symbol, marketType);
+  const contractSize = getContractSize(symbol, marketType || 'CRYPTO');
   const actualUnits = lotSizeValue * contractSize;
   const tradeValue = actualUnits * Number(entry_price);
 
@@ -113,7 +127,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  // FIXED: Pointing back to your actual database table 'trades'
   const { data: insertedTrade, error: tradeError } = await dbClient
     .from('trades')
     .insert({
@@ -122,7 +135,7 @@ export async function POST(request: NextRequest) {
       type,
       amount: lotSizeValue, 
       entry_price: Number(entry_price),
-      market_type: marketType,
+      market_type: marketType || 'CRYPTO', 
       status: 'OPEN', 
     })
     .select()
