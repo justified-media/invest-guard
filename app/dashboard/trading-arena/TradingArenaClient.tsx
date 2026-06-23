@@ -45,13 +45,14 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
   const [livePrice, setLivePrice] = useState(ASSETS[0].basePrice);
 
-  // 1. PERSISTENCE ENGINE: Fetch active open positions from your DB on mount
+  // 1. PERSISTENCE ENGINE: Fetch active open positions on mount from unified /api/trades
   useEffect(() => {
     setIsMounted(true);
 
     const fetchActivePositions = async () => {
       try {
-        const response = await fetch(`/api/positions?userId=${userId}`);
+        // FIXED: Pointed directly to your new consolidated endpoint
+        const response = await fetch(`/api/trades?userId=${userId}`);
         if (response.ok) {
           const data = await response.json();
           setPositions(data.positions || []);
@@ -110,12 +111,13 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
     setExecuting(true);
 
     try {
-      const response = await fetch('/api/trade', {
+      // FIXED: URL updated to point to the renamed /api/trades folder path
+      const response = await fetch('/api/trades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
-          amount: enteredLots, // saving actual requested lot layout
+          amount: enteredLots, 
           type: mode,
           symbol: selectedAsset.id,
           entry_price: livePrice,
@@ -130,7 +132,6 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
 
       setBalance(result.balance ?? balance);
 
-      // Add to layout state locally while it lives securely in your database
       const newPosition: Position = {
         id: result.tradeId || Math.random().toString(36).substring(2, 9),
         symbol: selectedAsset.id,
@@ -154,7 +155,8 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
     if (!confirm(`Are you sure you want to close this position?`)) return;
 
     try {
-      const response = await fetch('/api/trade/close', {
+      // FIXED: URL updated to point to /api/trades/close
+      const response = await fetch('/api/trades/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, positionId: position.id, pnl: currentPnL }),
@@ -231,7 +233,7 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
             </div>
           </div>
 
-          {/* Open Positions Board (Survives Browser Refreshes Now!) */}
+          {/* Open Positions Board */}
           <div className="rounded-[32px] border border-slate-800 bg-slate-900 p-6 shadow-2xl">
             <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Open Positions</h3>
             {positions.length === 0 ? (
@@ -255,7 +257,6 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
                       const currentMarketPrice = matchingAsset.id === selectedAsset.id ? livePrice : matchingAsset.basePrice;
                       
                       const priceDiff = currentMarketPrice - pos.entryPrice;
-                      // Exness style Profit Calculation: Pip Diff * Lot Size * Contract size
                       const totalUnitsTraded = pos.amount * matchingAsset.contractSize;
                       const pnl = pos.type === 'BUY' ? priceDiff * totalUnitsTraded : -priceDiff * totalUnitsTraded;
                       
