@@ -1,9 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AdvancedRealTimeChart } from 'react-ts-tradingview-widgets';
-import { supabase } from '@/utils/supabase';
 
 const SIMULATED_PRICE = 65000;
 
@@ -17,6 +16,12 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
   const [amount, setAmount] = useState('0.01');
   const [mode, setMode] = useState<'BUY' | 'SELL'>('BUY');
   const [executing, setExecuting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state to true after component attaches to the browser DOM
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const totalCost = useMemo(() => {
     const value = Number(amount || '0');
@@ -39,30 +44,24 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
     setExecuting(true);
 
     try {
-      const newBalance = mode === 'BUY' ? balance - tradeValue : balance + tradeValue;
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ balance: newBalance })
-        .eq('id', userId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      const { error: tradeError } = await supabase.from('trades').insert({
-        user_id: userId,
-        symbol: 'BINANCE:BTCUSDT',
-        type: mode,
-        amount: btcAmount,
-        entry_price: SIMULATED_PRICE,
+      const response = await fetch('/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: btcAmount,
+          type: mode,
+          symbol: 'BINANCE:BTCUSDT',
+          entry_price: SIMULATED_PRICE,
+        }),
       });
 
-      if (tradeError) {
-        throw tradeError;
+      const result = await response.json();
+      if (!response.ok || result.error) {
+        console.error('Trade API error:', result.error || 'unknown');
+        throw new Error(result.error || 'Trade failed.');
       }
 
-      setBalance(newBalance);
+      setBalance(result.balance ?? balance);
       alert(`${mode} order executed successfully for ${btcAmount} BTC at $${SIMULATED_PRICE.toLocaleString()}.`);
     } catch (error) {
       console.error(error);
@@ -103,12 +102,18 @@ export default function TradingArenaClient({ initialBalance, userId }: TradingAr
             </div>
 
             <div className="overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950">
-              <AdvancedRealTimeChart
-                symbol="BINANCE:BTCUSDT"
-                theme="dark"
-                height="600px"
-                allow_symbol_change
-              />
+              {isMounted ? (
+                <AdvancedRealTimeChart
+                  symbol="BINANCE:BTCUSDT"
+                  theme="dark"
+                  height="600px"
+                  allow_symbol_change
+                />
+              ) : (
+                <div className="flex h-[600px] w-full items-center justify-center text-sm uppercase tracking-widest text-slate-500">
+                  Loading Live Chart...
+                </div>
+              )}
             </div>
           </div>
         </section>
