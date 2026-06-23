@@ -65,6 +65,16 @@ export default function MobileNav() {
           >
             Overview
           </Link>
+          
+          {/* Added Invest Tiers Route Link */}
+          <Link
+            href="/dashboard/invest"
+            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-sky-400 transition hover:border-slate-700"
+            onClick={() => setDrawerOpen(false)}
+          >
+            Invest Tiers
+          </Link>
+
           <Link
             href="/dashboard/trading-arena"
             className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
@@ -72,6 +82,16 @@ export default function MobileNav() {
           >
             Trading Arena
           </Link>
+
+          {/* Added Trade History Ledger Link */}
+          <Link
+            href="/dashboard/trade-history"
+            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            onClick={() => setDrawerOpen(false)}
+          >
+            Trade History
+          </Link>
+
           <button
             type="button"
             onClick={() => setDrawerOpen(false)}
@@ -79,6 +99,7 @@ export default function MobileNav() {
           >
             My Portfolio
           </button>
+          
           <form action={logout} className="mt-4">
             <button
               type="submit"
