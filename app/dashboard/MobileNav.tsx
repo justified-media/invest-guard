@@ -57,7 +57,7 @@ export default function MobileNav() {
           </button>
         </div>
 
-        <nav className="space-y-3 p-5">
+        <nav className="space-y-3 p-5 overflow-y-auto max-h-[calc(100vh-80px)]">
           <Link
             href="/dashboard"
             className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-white transition hover:border-slate-700"
@@ -66,7 +66,6 @@ export default function MobileNav() {
             Overview
           </Link>
           
-          {/* Added Invest Tiers Route Link */}
           <Link
             href="/dashboard/invest"
             className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-sky-400 transition hover:border-slate-700"
@@ -83,13 +82,21 @@ export default function MobileNav() {
             Trading Arena
           </Link>
 
-          {/* Added Trade History Ledger Link */}
           <Link
             href="/dashboard/trade-history"
             className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
             Trade History
+          </Link>
+
+          {/* Added Capital Loans Link */}
+          <Link
+            href="/dashboard/loans"
+            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            onClick={() => setDrawerOpen(false)}
+          >
+            Capital Loans
           </Link>
 
           <button
