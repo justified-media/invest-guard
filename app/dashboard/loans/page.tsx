@@ -86,7 +86,7 @@ export default function LoanDemoPage() {
               <input
                 type="text"
                 required
-                placeholder="Justice Developer"
+                placeholder="john doe"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-colors"
