@@ -55,6 +55,17 @@ export default async function DashboardLayout({
             <Link href="/dashboard/trading-arena" className="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl font-medium transition-all">
               📈 Trading Arena
             </Link>
+            
+            {/* Added Trade History Link */}
+            <Link href="/dashboard/trade-history" className="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl font-medium transition-all">
+              📜 Trade History
+            </Link>
+
+            {/* Added Loans Link */}
+            <Link href="/dashboard/loans" className="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl font-medium transition-all">
+              💵 Capital Loans
+            </Link>
+
             <button className="w-full text-left flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 rounded-xl font-medium transition-all">
               💼 My Portfolio
             </button>
