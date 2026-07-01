@@ -4,6 +4,16 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { logout } from './actions.server';
+import { 
+  LayoutDashboard, 
+  Layers, 
+  TrendingUp, 
+  History, 
+  Coins, 
+  Wallet, 
+  ArrowUpRight, 
+  LogOut 
+} from 'lucide-react';
 
 export default function MobileNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,58 +70,75 @@ export default function MobileNav() {
         <nav className="space-y-3 p-5 overflow-y-auto max-h-[calc(100vh-80px)]">
           <Link
             href="/dashboard"
-            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-white transition hover:border-slate-700"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-white transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
+            <LayoutDashboard className="h-5 w-5 text-sky-500" />
             Overview
           </Link>
           
           <Link
             href="/dashboard/invest"
-            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-sky-400 transition hover:border-slate-700"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
+            <Layers className="h-5 w-5 text-sky-500" />
             Invest Tiers
           </Link>
 
           <Link
             href="/dashboard/trading-arena"
-            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
+            <TrendingUp className="h-5 w-5 text-sky-500" />
             Trading Arena
           </Link>
 
           <Link
             href="/dashboard/trade-history"
-            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
+            <History className="h-5 w-5 text-sky-500" />
             Trade History
           </Link>
 
-          {/* Added Capital Loans Link */}
           <Link
             href="/dashboard/loans"
-            className="block rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
           >
+            <Coins className="h-5 w-5 text-sky-500" />
             Capital Loans
           </Link>
 
-          <button
-            type="button"
+          {/* New Fund Account Module Link */}
+          <Link
+            href="/dashboard/deposit"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
             onClick={() => setDrawerOpen(false)}
-            className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-left text-base font-semibold text-slate-100 transition hover:border-slate-700"
           >
-            My Portfolio
-          </button>
+            <Wallet className="h-5 w-5 text-sky-500" />
+            Fund Account
+          </Link>
+
+          {/* New Capital Removal Module Link */}
+          <Link
+            href="/dashboard/removal"
+            className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <ArrowUpRight className="h-5 w-5 text-sky-500" />
+            Capital Removal
+          </Link>
           
           <form action={logout} className="mt-4">
             <button
               type="submit"
-              className="w-full rounded-3xl bg-red-500/10 border border-red-500/20 px-4 py-4 text-base font-semibold text-red-300 transition hover:bg-red-500/15"
+              className="flex items-center justify-center gap-3 w-full rounded-3xl bg-red-500/10 border border-red-500/20 px-4 py-4 text-base font-semibold text-red-300 transition hover:bg-red-500/15"
             >
+              <LogOut className="h-5 w-5 text-red-400" />
               Log Out
             </button>
           </form>
