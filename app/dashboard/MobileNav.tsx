@@ -4,16 +4,17 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { logout } from './actions.server';
-import { 
-  LayoutDashboard, 
-  Layers, 
-  TrendingUp, 
-  History, 
-  Coins, 
-  Wallet, 
-  ArrowUpRight, 
-  LogOut 
-} from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically load the icons so they bypass Vercel's server compilation step completely
+const LayoutDashboard = dynamic(() => import('lucide-react').then((mod) => mod.LayoutDashboard), { ssr: false });
+const Layers = dynamic(() => import('lucide-react').then((mod) => mod.Layers), { ssr: false });
+const TrendingUp = dynamic(() => import('lucide-react').then((mod) => mod.TrendingUp), { ssr: false });
+const History = dynamic(() => import('lucide-react').then((mod) => mod.History), { ssr: false });
+const Coins = dynamic(() => import('lucide-react').then((mod) => mod.Coins), { ssr: false });
+const Wallet = dynamic(() => import('lucide-react').then((mod) => mod.Wallet), { ssr: false });
+const ArrowUpRight = dynamic(() => import('lucide-react').then((mod) => mod.ArrowUpRight), { ssr: false });
+const LogOut = dynamic(() => import('lucide-react').then((mod) => mod.LogOut), { ssr: false });
 
 export default function MobileNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -113,7 +114,6 @@ export default function MobileNav() {
             Capital Loans
           </Link>
 
-          {/* New Fund Account Module Link */}
           <Link
             href="/dashboard/deposit"
             className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
@@ -123,7 +123,6 @@ export default function MobileNav() {
             Fund Account
           </Link>
 
-          {/* New Capital Removal Module Link */}
           <Link
             href="/dashboard/removal"
             className="flex items-center gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-4 py-4 text-base font-semibold text-slate-100 transition hover:border-slate-700"
