@@ -39,8 +39,7 @@ export async function POST(request: Request) {
   const profileClient = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceRoleClient() : supabase;
   const { error: profileError } = await profileClient.from('profiles').insert({
     id: data.user.id,
-    username,
-    balance: 10000,
+    username
   });
 
   if (profileError) {
