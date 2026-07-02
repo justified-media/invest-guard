@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       {
         id: user.id,
         username,
-        balance: 10000,
+        balance: 0,
       },
       { onConflict: 'id' }
     );
