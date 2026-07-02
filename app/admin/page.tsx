@@ -59,6 +59,13 @@ export default function AdminPage() {
     verifyAdmin();
   }, [activeTab, router]);
 
+  // Updated to match your exact Supabase table names
+  const getTableName = (tab: TabType): string => {
+    if (tab === 'users') return 'profiles';
+    if (tab === 'loans') return 'loan_requests'; // ✅ Fixed matching image_7bc423.png
+    return tab;
+  };
+
   const fetchTabData = async (tab: TabType) => {
     setLoading(true);
     if (tab === 'settings') {
@@ -68,7 +75,7 @@ export default function AdminPage() {
         setWalletSettings(configMap);
       }
     } else {
-      const targetTable = tab === 'users' ? 'profiles' : tab;
+      const targetTable = getTableName(tab);
       const { data: result, error } = await supabase
         .from(targetTable)
         .select('*')
@@ -82,17 +89,18 @@ export default function AdminPage() {
   // Process Deposits & Loans
   const handleUpdateStatus = async (id: string, newStatus: 'APPROVED' | 'REJECTED', userId?: string, amount?: number) => {
     try {
-      // 1. Update the ledger entry status (deposits or loans)
+      const targetTable = getTableName(activeTab);
+
+      // 1. Update the correct ledger entry status
       const { error } = await supabase
-        .from(activeTab)
+        .from(targetTable)
         .update({ status: newStatus })
         .eq('id', id);
 
       if (error) throw error;
 
-      // Fixed: Balance updates now apply to BOTH deposits and loans upon approval
+      // 2. Add approved transaction amounts directly into the user profile balance
       if (newStatus === 'APPROVED' && userId && amount) {
-        // Fetch current user balance explicitly to prevent transaction mismatch overwrites
         const { data: currentProfile, error: profileError } = await supabase
           .from('profiles')
           .select('balance')
@@ -103,7 +111,6 @@ export default function AdminPage() {
 
         const currentBalance = currentProfile?.balance || 0;
         
-        // Add the approved transaction amount to their existing profile balance
         const { error: balanceError } = await supabase
           .from('profiles')
           .update({ balance: currentBalance + amount })
@@ -112,9 +119,9 @@ export default function AdminPage() {
         if (balanceError) throw balanceError;
       }
 
-      // Sync local component state array instantly
+      // Sync UI state
       setData(prev => prev.map(item => item.id === id ? { ...item, status: newStatus } : item));
-      alert(`Transaction row updated successfully to ${newStatus}.`);
+      alert(`Transaction updated successfully to ${newStatus}.`);
     } catch (err: any) {
       console.error(err);
       alert(`Failed to execute data modification: ${err.message || "Unknown error"}`);
@@ -229,7 +236,7 @@ export default function AdminPage() {
                 <tr className="bg-slate-950/50 text-[10px] uppercase tracking-widest text-slate-500 font-bold border-b border-slate-800">
                   <th className="p-4 pl-6">Target User Reference</th>
                   <th className="p-4">Amount</th>
-                  <th className="p-4">Type Allocation</th>
+                  <th className="p-4">Info / Details</th>
                   <th className="p-4 text-center">Status Index</th>
                   <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
@@ -238,27 +245,33 @@ export default function AdminPage() {
                 {data.length === 0 ? (
                   <tr><td colSpan={5} className="p-12 text-center text-slate-500">QUEUE EMPTY</td></tr>
                 ) : (
-                  data.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-800/10">
-                      <td className="p-4 pl-6 text-slate-400 truncate max-w-[150px]">{row.user_id}</td>
-                      <td className="p-4 font-bold text-white">${row.amount?.toLocaleString()}</td>
-                      <td className="p-4 text-sky-400 font-bold">{row.asset_type || row.loan_tier || 'USD'}</td>
-                      <td className="p-4 text-center">
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
-                          row.status === 'APPROVED' ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900' :
-                          row.status === 'REJECTED' ? 'bg-rose-950/30 text-rose-400 border-rose-900' : 'bg-amber-950/30 text-amber-400 border-amber-900'
-                        }`}>{row.status}</span>
-                      </td>
-                      <td className="p-4 pr-6 text-right">
-                        {row.status === 'PENDING' ? (
-                          <div className="flex justify-end gap-2">
-                            <button onClick={() => handleUpdateStatus(row.id, 'APPROVED', row.user_id, row.amount)} className="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500 hover:text-slate-950 cursor-pointer"><Check className="h-3.5 w-3.5" /></button>
-                            <button onClick={() => handleUpdateStatus(row.id, 'REJECTED')} className="p-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg hover:bg-rose-500 hover:text-slate-950 cursor-pointer"><X className="h-3.5 w-3.5" /></button>
-                          </div>
-                        ) : <span className="text-slate-600 italic text-[10px]">Settled</span>}
-                      </td>
-                    </tr>
-                  ))
+                  data.map((row) => {
+                    // ✅ Safely handle dynamic column naming based on current active tab
+                    const rowAmount = activeTab === 'loans' ? row.requested_amount : row.amount;
+                    const rowDetail = activeTab === 'loans' ? (row.employment_status || 'N/A') : (row.asset_type || 'USD');
+
+                    return (
+                      <tr key={row.id} className="hover:bg-slate-800/10">
+                        <td className="p-4 pl-6 text-slate-400 truncate max-w-[150px]">{row.user_id}</td>
+                        <td className="p-4 font-bold text-white">${rowAmount?.toLocaleString()}</td>
+                        <td className="p-4 text-sky-400 font-bold">{rowDetail}</td>
+                        <td className="p-4 text-center">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
+                            row.status === 'APPROVED' ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900' :
+                            row.status === 'REJECTED' ? 'bg-rose-950/30 text-rose-400 border-rose-900' : 'bg-amber-950/30 text-amber-400 border-amber-900'
+                          }`}>{row.status}</span>
+                        </td>
+                        <td className="p-4 pr-6 text-right">
+                          {row.status === 'PENDING' ? (
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => handleUpdateStatus(row.id, 'APPROVED', row.user_id, rowAmount)} className="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg hover:bg-emerald-500 hover:text-slate-950 cursor-pointer"><Check className="h-3.5 w-3.5" /></button>
+                              <button onClick={() => handleUpdateStatus(row.id, 'REJECTED')} className="p-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg hover:bg-rose-500 hover:text-slate-950 cursor-pointer"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                          ) : <span className="text-slate-600 italic text-[10px]">Settled</span>}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
