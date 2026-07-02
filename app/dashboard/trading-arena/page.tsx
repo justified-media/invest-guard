@@ -31,7 +31,7 @@ export default async function TradingArenaPage() {
     .eq('id', user.id)
     .single();
 
-  let balance = 10000;
+  let balance = 0;
   if ((profileError && status !== 406) || (!profile && status !== 406 && profileError)) {
     console.error('Profile fetch failed:', profileError?.message || 'unexpected error');
     redirect('/dashboard');
