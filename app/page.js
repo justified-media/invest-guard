@@ -187,7 +187,7 @@ const ASSET_CONFIG = [
   }
 ];
 
-// Live Chart Component
+// Live Chart Component - FIXED with GPU isolation
 function LiveChart({ data, isUp }) {
   const canvasRef = useRef(null);
   
@@ -199,8 +199,10 @@ function LiveChart({ data, isUp }) {
     const width = canvas.width;
     const height = canvas.height;
     
+    // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
+    // Draw grid lines
     ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
     ctx.lineWidth = 0.5;
     for (let i = 0; i < 4; i++) {
@@ -211,6 +213,7 @@ function LiveChart({ data, isUp }) {
       ctx.stroke();
     }
     
+    // Draw chart
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
@@ -283,6 +286,16 @@ function LiveChart({ data, isUp }) {
       width={300} 
       height={80} 
       className="w-full h-full"
+      style={{
+        // CRITICAL FIX: Force GPU compositing layer
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        // Prevent canvas corruption on scroll
+        imageRendering: 'auto',
+        WebkitImageRendering: 'auto'
+      }}
     />
   );
 }
@@ -352,7 +365,6 @@ export default function Home() {
   useEffect(() => {
     const fetchPrices = async function() {
       try {
-        // Try CoinGecko first
         const ids = ASSET_CONFIG.map(function(asset) { return asset.id; }).join(',');
         const url = 'https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true';
         
@@ -363,7 +375,6 @@ export default function Home() {
           const data = await response.json();
           console.log('✅ CoinGecko data received:', data);
           
-          // Check if we got valid data
           const hasData = ASSET_CONFIG.some(function(asset) {
             return data[asset.id] && data[asset.id].usd !== undefined;
           });
@@ -380,7 +391,6 @@ export default function Home() {
           }
         }
         
-        // If CoinGecko fails, try Binance API
         console.log('🔄 Trying Binance API...');
         const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT"]');
         
@@ -388,7 +398,6 @@ export default function Home() {
           const binanceData = await binanceResponse.json();
           console.log('✅ Binance data received:', binanceData);
           
-          // Map Binance data to our format
           const mappedData = {};
           binanceData.forEach(function(item) {
             const symbolMap = {
@@ -415,7 +424,6 @@ export default function Home() {
           return;
         }
         
-        // If both fail, use fallback data
         console.warn('⚠️ All APIs failed, using fallback data');
         const fallbackData = {};
         ASSET_CONFIG.forEach(function(asset) {
@@ -432,7 +440,6 @@ export default function Home() {
         
       } catch (error) {
         console.error('❌ Error fetching prices:', error);
-        // Use fallback data on error
         const fallbackData = {};
         ASSET_CONFIG.forEach(function(asset) {
           fallbackData[asset.id] = {
@@ -932,7 +939,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. METATRADER 5 DOWNLOAD BANNER */}
+      {/* 8. METATRADER 5 DOWNLOAD BANNER - FIXED WITH GPU ISOLATION */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-3xl p-8 md:p-12 border border-slate-800/60">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl" />
@@ -995,8 +1002,10 @@ export default function Home() {
               </div>
             </div>
             
+            {/* MT5 Interface Mockup - FIXED with GPU isolation */}
             <div className="relative">
-              <div className="aspect-[4/3] max-w-md mx-auto bg-gradient-to-br from-slate-900/50 to-slate-950/50 rounded-2xl border border-slate-700/50 p-4 shadow-2xl">
+              {/* CRITICAL FIX: Outer container with GPU isolation and overflow containment */}
+              <div className="aspect-[4/3] max-w-md mx-auto bg-gradient-to-br from-slate-900/50 to-slate-950/50 rounded-2xl border border-slate-700/50 p-4 shadow-2xl isolate overflow-hidden transform-gpu backface-hidden will-change-transform">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 rounded-full bg-rose-400" />
@@ -1005,14 +1014,30 @@ export default function Home() {
                   </div>
                   <span className="text-xs text-slate-500 ml-2">MetaTrader 5 · Advanced Charts</span>
                 </div>
-                <div className="bg-slate-950/50 rounded-lg p-3 border border-slate-800/30">
-                  <svg className="w-full h-32" viewBox="0 0 300 100">
+                
+                {/* Chart area with GPU isolation */}
+                <div className="bg-slate-950/50 rounded-lg p-3 border border-slate-800/30 transform-gpu backface-hidden will-change-transform">
+                  <svg 
+                    className="w-full h-32 transform-gpu backface-hidden will-change-transform"
+                    viewBox="0 0 300 100"
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{
+                      transform: 'translateZ(0)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden'
+                    }}
+                  >
                     <polyline
                       points="0,80 30,70 60,85 90,60 120,50 150,65 180,40 210,55 240,30 270,45 300,20"
                       fill="none"
                       stroke="#38bdf8"
                       strokeWidth="3"
                       className="opacity-80"
+                      style={{
+                        vectorEffect: 'non-scaling-stroke',
+                        shapeRendering: 'auto'
+                      }}
                     />
                     <polyline
                       points="0,80 30,70 60,85 90,60 120,50 150,65 180,40 210,55 240,30 270,45 300,20"
@@ -1020,6 +1045,10 @@ export default function Home() {
                       stroke="#38bdf8"
                       strokeWidth="6"
                       className="opacity-20 blur-sm"
+                      style={{
+                        vectorEffect: 'non-scaling-stroke',
+                        shapeRendering: 'auto'
+                      }}
                     />
                     <circle cx="240" cy="30" r="4" fill="#34d399" />
                     <text x="245" y="35" fontSize="8" fill="#34d399" className="font-mono">$43,245</text>
@@ -1033,16 +1062,15 @@ export default function Home() {
                     <span>20:00</span>
                   </div>
                 </div>
-                <div className="absolute bottom-4 right-4 text-[10px] text-slate-600 font-mono">
-                  MT5 · v4.02
-                </div>
+                
+                <div className="absolute bottom-4 right-4 text-[10px] text-slate-600 font-mono">MT5 · v4.02</div>
                 <div className="absolute top-4 right-4 flex gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />
                   <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
                 </div>
               </div>
-              <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-sky-500/10 rounded-full blur-xl" />
+              <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-sky-500/10 rounded-full blur-xl pointer-events-none" />
             </div>
           </div>
         </div>
@@ -1223,6 +1251,44 @@ export default function Home() {
 
         .animate-scroll:hover {
           animation-play-state: paused;
+        }
+
+        /* CRITICAL FIX: GPU compositing and isolation for chart containers */
+        .transform-gpu {
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+        }
+
+        .backface-hidden {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        .will-change-transform {
+          will-change: transform;
+        }
+
+        .isolate {
+          isolation: isolate;
+        }
+
+        /* Prevent canvas/SVG corruption on scroll */
+        canvas, svg {
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        /* Force hardware acceleration for chart containers */
+        .chart-container {
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          will-change: transform;
+          isolation: isolate;
+          overflow: hidden;
         }
       `}</style>
     </div>
