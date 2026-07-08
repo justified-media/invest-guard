@@ -32,7 +32,14 @@ import {
   ExternalLink,
   Gift,
   Rocket,
-  Activity
+  Activity,
+  MessageCircle,
+  Headphones,
+  CreditCard,
+  ShieldCheck,
+  Building,
+  Percent,
+  ArrowRight
 } from 'lucide-react';
 
 // Stats Data (Static - these don't change with live prices)
@@ -84,6 +91,38 @@ const SECURITY_FEATURES = [
   "Biometric Access Control"
 ];
 
+// Trust Section Data - "A broker you can trust"
+const TRUST_FEATURES = [
+  {
+    icon: Building,
+    title: "25+ Years of Excellence",
+    description: "The OANDA Group has built an outstanding reputation for innovation, excellent customer care, transparent pricing and state-of-the-art platforms."
+  },
+  {
+    icon: CreditCard,
+    title: "Fast & Secure Transactions",
+    description: "Fast and safe withdrawals and deposits with multiple payment options available."
+  },
+  {
+    icon: TrendingUp,
+    title: "TradingView Integration",
+    description: "Trade directly from TradingView with the community's preferred broker."
+  },
+  {
+    icon: ShieldCheck,
+    title: "Global Regulation",
+    description: "Peace of mind: The OANDA Group is regulated in eight jurisdictions worldwide."
+  }
+];
+
+// Forex Pairs Data
+const FOREX_PAIRS = [
+  { pair: "EUR/USD", spread: "0.1415", pips: "-15.8 Pips", bid: "1.0898³", ask: "1.0898³" },
+  { pair: "USD/CAD", spread: "-0.3115", pips: "-41.3 Pips", bid: "1.3209³", ask: "1.3209³" },
+  { pair: "AUD/USD", spread: "0.3335", pips: "22.3 Pips", bid: "0.6693³", ask: "0.6694³" },
+  { pair: "USD/JPY", spread: "0.154", pips: "-38.4 Pips", bid: "144.32³", ask: "144.32³" }
+];
+
 // Testimonials with Unsplash profile images
 const TESTIMONIALS = [
   {
@@ -109,39 +148,14 @@ const TESTIMONIALS = [
   }
 ];
 
-// Footer Categories
-const FOOTER_CATEGORIES = {
-  aboutUs: [
-    { label: "Our Story", href: "#" },
-    { label: "Team", href: "#" },
-    { label: "Corporate Vision", href: "#" },
-    { label: "Careers", href: "#" }
-  ],
-  pricing: [
-    { label: "Starter Plan", href: "#" },
-    { label: "Pro Plan", href: "#" },
-    { label: "Enterprise Plan", href: "#" },
-    { label: "Fee Schedule", href: "#" }
-  ],
-  plans: [
-    { label: "Challenge Details", href: "#" },
-    { label: "Funded Accounts", href: "#" },
-    { label: "Allocation Tiers", href: "#" },
-    { label: "Profit Split", href: "#" }
-  ],
-  features: [
-    { label: "Trading Ecosystem", href: "#" },
-    { label: "API Access", href: "#" },
-    { label: "Advanced Tools", href: "#" },
-    { label: "Mobile Trading", href: "#" }
-  ],
-  support: [
-    { label: "Documentation", href: "#" },
-    { label: "Live Chat", href: "#" },
-    { label: "Support Tickets", href: "#" },
-    { label: "Community", href: "#" }
-  ]
-};
+// Simplified Footer Sections - Main links only
+const FOOTER_SECTIONS = [
+  { label: "Features", href: "#features", icon: BarChart3 },
+  { label: "Pricing", href: "#pricing", icon: DollarSign },
+  { label: "Security", href: "#security", icon: Shield },
+  { label: "Trust", href: "#trust", icon: ShieldCheck },
+  { label: "Help & Support", href: "#help", icon: Headphones }
+];
 
 // Asset configuration with REAL reference prices (fallback)
 const ASSET_CONFIG = [
@@ -187,7 +201,7 @@ const ASSET_CONFIG = [
   }
 ];
 
-// Live Chart Component - FIXED with GPU isolation
+// Live Chart Component
 function LiveChart({ data, isUp }) {
   const canvasRef = useRef(null);
   
@@ -199,10 +213,8 @@ function LiveChart({ data, isUp }) {
     const width = canvas.width;
     const height = canvas.height;
     
-    // Clear canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Draw grid lines
     ctx.strokeStyle = 'rgba(51, 65, 85, 0.2)';
     ctx.lineWidth = 0.5;
     for (let i = 0; i < 4; i++) {
@@ -213,7 +225,6 @@ function LiveChart({ data, isUp }) {
       ctx.stroke();
     }
     
-    // Draw chart
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
@@ -287,12 +298,10 @@ function LiveChart({ data, isUp }) {
       height={80} 
       className="w-full h-full"
       style={{
-        // CRITICAL FIX: Force GPU compositing layer
         transform: 'translateZ(0)',
         willChange: 'transform',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
-        // Prevent canvas corruption on scroll
         imageRendering: 'auto',
         WebkitImageRendering: 'auto'
       }}
@@ -368,12 +377,10 @@ export default function Home() {
         const ids = ASSET_CONFIG.map(function(asset) { return asset.id; }).join(',');
         const url = 'https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true';
         
-        console.log('🔄 Fetching from CoinGecko:', url);
         const response = await fetch(url);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ CoinGecko data received:', data);
           
           const hasData = ASSET_CONFIG.some(function(asset) {
             return data[asset.id] && data[asset.id].usd !== undefined;
@@ -386,45 +393,9 @@ export default function Home() {
             setError(null);
             setApiSource('CoinGecko');
             return;
-          } else {
-            console.warn('⚠️ CoinGecko returned empty data, trying fallback...');
           }
         }
         
-        console.log('🔄 Trying Binance API...');
-        const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT"]');
-        
-        if (binanceResponse.ok) {
-          const binanceData = await binanceResponse.json();
-          console.log('✅ Binance data received:', binanceData);
-          
-          const mappedData = {};
-          binanceData.forEach(function(item) {
-            const symbolMap = {
-              'BTCUSDT': 'bitcoin',
-              'ETHUSDT': 'ethereum',
-              'SOLUSDT': 'solana',
-              'BNBUSDT': 'binancecoin',
-              'XRPUSDT': 'ripple'
-            };
-            const id = symbolMap[item.symbol];
-            if (id) {
-              mappedData[id] = {
-                usd: parseFloat(item.lastPrice),
-                usd_24h_change: parseFloat(item.priceChangePercent)
-              };
-            }
-          });
-          
-          setLivePrices(mappedData);
-          setLastUpdated(new Date());
-          setLoading(false);
-          setError(null);
-          setApiSource('Binance');
-          return;
-        }
-        
-        console.warn('⚠️ All APIs failed, using fallback data');
         const fallbackData = {};
         ASSET_CONFIG.forEach(function(asset) {
           fallbackData[asset.id] = {
@@ -439,7 +410,7 @@ export default function Home() {
         setApiSource('Fallback');
         
       } catch (error) {
-        console.error('❌ Error fetching prices:', error);
+        console.error('Error fetching prices:', error);
         const fallbackData = {};
         ASSET_CONFIG.forEach(function(asset) {
           fallbackData[asset.id] = {
@@ -548,14 +519,17 @@ export default function Home() {
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <Link href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
               Features
             </Link>
-            <Link href="#" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <Link href="#pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
               Pricing
             </Link>
-            <Link href="#" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <Link href="#security" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
               Security
+            </Link>
+            <Link href="#trust" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+              Trust
             </Link>
             <Link href="/login" className="px-5 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
               Login
@@ -575,14 +549,17 @@ export default function Home() {
 
         {isMobileMenuOpen && (
           <div className="md:hidden px-4 py-4 border-t border-slate-800/60 space-y-3">
-            <Link href="#" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
+            <Link href="#features" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
               Features
             </Link>
-            <Link href="#" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
+            <Link href="#pricing" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
               Pricing
             </Link>
-            <Link href="#" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
+            <Link href="#security" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
               Security
+            </Link>
+            <Link href="#trust" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
+              Trust
             </Link>
             <Link href="/login" className="block text-sm font-medium text-slate-300 hover:text-white transition-colors py-2">
               Login
@@ -664,7 +641,7 @@ export default function Home() {
                 <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link 
-                href="#features"
+                href="#top-trading-charts"
                 className="px-8 py-4 border border-slate-700 hover:border-sky-500 text-slate-300 hover:text-white font-medium rounded-xl transition-all duration-200 hover:scale-105 inline-flex items-center justify-center gap-2"
               >
                 Explore Markets
@@ -773,7 +750,7 @@ export default function Home() {
       </section>
 
       {/* 4. WHY CHOOSE GRID */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
+      <section id="features" className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-3">
             Why Choose Invest Guard
@@ -800,7 +777,7 @@ export default function Home() {
       </section>
 
       {/* 5. TOP ASSETS SLIDER */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60">
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60" id="top-trading-charts">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-3">
             Top Trading Assets
@@ -854,7 +831,7 @@ export default function Home() {
       </section>
 
       {/* 6. PROCESS PIPELINE */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60">
+      <section id="pricing" className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-3">
             Start Trading in Minutes
@@ -885,7 +862,7 @@ export default function Home() {
       </section>
 
       {/* 7. SECURITY SECTION */}
-      <section className="bg-slate-900/30 border-y border-slate-800/60 py-16 md:py-20">
+      <section id="security" className="bg-slate-900/30 border-y border-slate-800/60 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -939,8 +916,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. METATRADER 5 DOWNLOAD BANNER - FIXED WITH GPU ISOLATION */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
+      {/* 8. TRUST SECTION - "A broker you can trust" */}
+      <section id="trust" className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-3">
+            A Broker You Can Trust
+          </h2>
+          <p className="text-slate-400 max-w-2xl mx-auto">
+            For over 25 years, the OANDA Group has built an outstanding reputation for innovation, 
+            excellent customer care, transparent pricing and state-of-the-art platforms.
+          </p>
+        </div>
+
+        {/* Forex Pairs Table */}
+        <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/60 rounded-2xl overflow-hidden mb-8">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-950/50 border-b border-slate-800/60">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Pair</th>
+                  <th className="px-6 py-4 text-left text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Spread</th>
+                  <th className="px-6 py-4 text-left text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Pips</th>
+                  <th className="px-6 py-4 text-left text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Bid</th>
+                  <th className="px-6 py-4 text-left text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Ask</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {FOREX_PAIRS.map(function(pair, index) {
+                  const isUp = parseFloat(pair.pips) > 0;
+                  return (
+                    <tr key={index} className="hover:bg-slate-900/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-white">{pair.pair}</td>
+                      <td className="px-6 py-4 text-sm text-slate-300">{pair.spread}</td>
+                      <td className={'px-6 py-4 text-sm font-bold ' + (isUp ? 'text-emerald-400' : 'text-rose-400')}>
+                        {pair.pips}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-300">{pair.bid}</td>
+                      <td className="px-6 py-4 text-sm text-slate-300">{pair.ask}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Trust Features Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {TRUST_FEATURES.map(function(item, index) {
+            var Icon = item.icon;
+            return (
+              <div key={index} className="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 hover:border-sky-500/30 transition-all hover:-translate-y-1 duration-300">
+                <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mb-4">
+                  <Icon className="h-6 w-6 text-sky-400" />
+                </div>
+                <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">{item.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{item.description}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA Buttons - Removed Demo Account */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link 
+            href="/signup"
+            className="px-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-medium rounded-xl shadow-2xl shadow-sky-500/20 transition-all duration-200 hover:scale-105 inline-flex items-center justify-center gap-2 group"
+          >
+            Create Account
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </section>
+
+      {/* 9. METATRADER 5 DOWNLOAD BANNER */}
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60">
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-900/80 to-slate-950/80 rounded-3xl p-8 md:p-12 border border-slate-800/60">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
@@ -1002,9 +1052,8 @@ export default function Home() {
               </div>
             </div>
             
-            {/* MT5 Interface Mockup - FIXED with GPU isolation */}
+            {/* MT5 Interface Mockup */}
             <div className="relative">
-              {/* CRITICAL FIX: Outer container with GPU isolation and overflow containment */}
               <div className="aspect-[4/3] max-w-md mx-auto bg-gradient-to-br from-slate-900/50 to-slate-950/50 rounded-2xl border border-slate-700/50 p-4 shadow-2xl isolate overflow-hidden transform-gpu backface-hidden will-change-transform">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex gap-1">
@@ -1015,7 +1064,6 @@ export default function Home() {
                   <span className="text-xs text-slate-500 ml-2">MetaTrader 5 · Advanced Charts</span>
                 </div>
                 
-                {/* Chart area with GPU isolation */}
                 <div className="bg-slate-950/50 rounded-lg p-3 border border-slate-800/30 transform-gpu backface-hidden will-change-transform">
                   <svg 
                     className="w-full h-32 transform-gpu backface-hidden will-change-transform"
@@ -1076,7 +1124,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. TESTIMONIALS */}
+      {/* 10. TESTIMONIALS */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20 border-t border-slate-800/60">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight mb-3">
@@ -1115,10 +1163,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 10. FOOTER */}
+      {/* 11. SIMPLIFIED FOOTER - Main links only, no sub-links */}
       <footer className="border-t border-slate-800/60 bg-slate-950/90 py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center">
@@ -1133,76 +1182,37 @@ export default function Home() {
               </p>
             </div>
 
+            {/* Features - Main link only */}
             <div>
-              <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">About Us</h4>
-              <ul className="space-y-2">
-                {FOOTER_CATEGORIES.aboutUs.map(function(link) {
-                  return (
-                    <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Features</h4>
+              <Link 
+                href="#features" 
+                className="text-sm text-slate-400 hover:text-white transition-colors hover:translate-x-1 transform inline-block"
+              >
+                View Features →
+              </Link>
             </div>
 
+            {/* Pricing - Main link only */}
             <div>
-              <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Pricing</h4>
-              <ul className="space-y-2">
-                {FOOTER_CATEGORIES.pricing.map(function(link) {
-                  return (
-                    <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">start trading</h4>
+              <Link 
+                href="#pricing" 
+                className="text-sm text-slate-400 hover:text-white transition-colors hover:translate-x-1 transform inline-block"
+              >
+                Invest Now →
+              </Link>
             </div>
 
-            <div>
-              <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Plans</h4>
-              <ul className="space-y-2">
-                {FOOTER_CATEGORIES.plans.map(function(link) {
-                  return (
-                    <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-              <h4 className="font-bold text-white text-sm uppercase tracking-wider mt-4 mb-2">Features</h4>
-              <ul className="space-y-2">
-                {FOOTER_CATEGORIES.features.map(function(link) {
-                  return (
-                    <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
+            {/* Help & Support - Main link only */}
             <div>
               <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Help &amp; Support</h4>
-              <ul className="space-y-2">
-                {FOOTER_CATEGORIES.support.map(function(link) {
-                  return (
-                    <li key={link.label}>
-                      <Link href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
-                        {link.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              <Link 
+                href="#help" 
+                className="text-sm text-slate-400 hover:text-white transition-colors hover:translate-x-1 transform inline-block"
+              >
+                Get Support →
+              </Link>
             </div>
           </div>
 
@@ -1210,20 +1220,26 @@ export default function Home() {
             <p className="text-sm text-slate-500">
               © 2026 Invest Guard. All rights reserved.
             </p>
-            <div className="flex gap-6">
-              <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-                Privacy
-              </Link>
-              <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-                Terms
-              </Link>
-              <Link href="#" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-                Cookies
-              </Link>
-            </div>
+            
           </div>
         </div>
       </footer>
+
+      {/* 12. CUSTOMER SUPPORT FLOATING CIRCLE - Left for you to link */}
+      <button 
+        className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 rounded-full shadow-2xl shadow-sky-500/30 transition-all duration-200 hover:scale-110 group"
+        aria-label="Customer Support"
+        onClick={function() {
+          // Add your support link/action here
+          console.log('Support button clicked - Add your link here');
+        }}
+      >
+        <MessageCircle className="h-6 w-6 text-white" />
+        <span className="absolute -top-1 -right-1 flex h-4 w-4">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-400" />
+        </span>
+      </button>
 
       <style jsx global>{`
         @keyframes pulse {
@@ -1253,7 +1269,7 @@ export default function Home() {
           animation-play-state: paused;
         }
 
-        /* CRITICAL FIX: GPU compositing and isolation for chart containers */
+        /* GPU compositing fixes */
         .transform-gpu {
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
@@ -1272,7 +1288,6 @@ export default function Home() {
           isolation: isolate;
         }
 
-        /* Prevent canvas/SVG corruption on scroll */
         canvas, svg {
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
@@ -1280,15 +1295,9 @@ export default function Home() {
           -webkit-backface-visibility: hidden;
         }
 
-        /* Force hardware acceleration for chart containers */
-        .chart-container {
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          will-change: transform;
-          isolation: isolate;
-          overflow: hidden;
+        /* Smooth hover transitions for footer links */
+        .hover\\:translate-x-1:hover {
+          transform: translateX(4px);
         }
       `}</style>
     </div>
