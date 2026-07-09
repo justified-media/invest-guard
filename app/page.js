@@ -923,7 +923,7 @@ export default function Home() {
             A Broker You Can Trust
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
-            For over 25 years, the OANDA Group has built an outstanding reputation for innovation, 
+            For over 25 years, the INVEST-GUARD Group has built an outstanding reputation for innovation, 
             excellent customer care, transparent pricing and state-of-the-art platforms.
           </p>
         </div>

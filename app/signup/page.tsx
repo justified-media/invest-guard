@@ -37,7 +37,7 @@ export default function SignupPage() {
 
       const oauthUrl = data.url;
       console.log('Google OAuth redirect URL:', oauthUrl);
-      setMessage(`Redirecting to Google: ${oauthUrl}`);
+      
       window.location.href = oauthUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -167,84 +167,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
